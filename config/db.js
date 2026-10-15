@@ -14,10 +14,12 @@ const database = client.db('bloodDonationDB');
 const usersCollection = database.collection('users');
 const requestsCollection = database.collection('requests');
 const paymentCollection = database.collection('payments');
+const centersCollection = database.collection('centers');
 
 module.exports = {
     client,
     usersCollection,
     requestsCollection,
-    paymentCollection
+    paymentCollection,
+    centersCollection
 };

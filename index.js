@@ -14,11 +14,13 @@ const { client } = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const centerRoutes = require('./routes/centerRoutes');
 
 // Use routes
 app.use(userRoutes);
 app.use(requestRoutes);
 app.use(paymentRoutes);
+app.use(centerRoutes);
 
 async function run() {
     try {
