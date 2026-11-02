@@ -6,6 +6,13 @@ const { verifyAdmin, verifyRole } = require('../middleware/verifyRole');
 
         router.post('/users', async (req, res) => {
             const userInfo = req.body;
+            const query = { email: userInfo.email };
+            const existingUser = await usersCollection.findOne(query);
+
+            if (existingUser) {
+                return res.send({ message: 'User already exists', insertedId: null });
+            }
+
             userInfo.createdAt = new Date();
             userInfo.role = 'donor';
             userInfo.status = 'active';

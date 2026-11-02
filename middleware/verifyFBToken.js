@@ -15,7 +15,6 @@ const verifyFBToken = async (req, res, next) => {
     try {
         const idToken = token.split(' ')[1];
         const decodedToken = await admin.auth().verifyIdToken(idToken);
-        console.log("Decoded Info:", decodedToken);
         req.decodedEmail = decodedToken.email;
         next();
 

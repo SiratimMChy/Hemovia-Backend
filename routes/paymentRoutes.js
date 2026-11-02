@@ -40,7 +40,6 @@ const verifyFBToken = require('../middleware/verifyFBToken');
             const session = await stripe.checkout.sessions.retrieve(
                 session_id
             );
-            console.log(session);
 
             const transactionId = session.payment_intent;
             if (session.payment_status == 'paid') {
@@ -65,6 +64,8 @@ const verifyFBToken = require('../middleware/verifyFBToken');
                 const result = await paymentCollection.insertOne(paymentInfo)
                 return res.send(result);
             }
+
+            res.status(400).send({ message: 'Payment not completed' });
         })
 
 
