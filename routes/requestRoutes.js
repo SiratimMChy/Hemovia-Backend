@@ -3,6 +3,7 @@ const router = express.Router();
 const { ObjectId } = require('mongodb');
 const { requestsCollection, usersCollection } = require('../config/db');
 const verifyFBToken = require('../middleware/verifyFBToken');
+const { verifyRole } = require('../middleware/verifyRole');
 
         router.post('/requests', verifyFBToken, async (req, res) => {
             const requestInfo = req.body;
@@ -11,7 +12,7 @@ const verifyFBToken = require('../middleware/verifyFBToken');
             res.send(result);
         });
 
-        router.get('/requests', verifyFBToken, async (req, res) => {
+        router.get('/requests', verifyFBToken, verifyRole('admin', 'volunteer'), async (req, res) => {
             const size = parseInt(req.query.size);
             const page = parseInt(req.query.page);
             const status = req.query.status;
@@ -76,19 +77,51 @@ const verifyFBToken = require('../middleware/verifyFBToken');
 
 
         router.put('/requests/:id', verifyFBToken, async (req, res) => {
-            const data = req.body;
-            const { id } = req.params;
-            const query = { _id: new ObjectId(id) };
-            const updatedRequest = { $set: data };
-            const result = await requestsCollection.updateOne(query, updatedRequest);
-            res.send(result);
+            try {
+                const data = req.body;
+                const { id } = req.params;
+                const email = req.decodedEmail;
+                const query = { _id: new ObjectId(id) };
+
+                const user = await usersCollection.findOne({ email });
+                const request = await requestsCollection.findOne(query);
+
+                if (!request) {
+                    return res.status(404).send({ message: 'Request not found' });
+                }
+
+                // admin and volunteer can update any request, normal users can only edit their own
+                if (user?.role !== 'admin' && user?.role !== 'volunteer' && request.requesterEmail !== email) {
+                    return res.status(403).send({ message: 'Forbidden access' });
+                }
+
+                const updatedRequest = { $set: data };
+                const result = await requestsCollection.updateOne(query, updatedRequest);
+                res.send(result);
+            } catch (error) {
+                res.status(500).send({ error: error.message });
+            }
         });
 
 
-        router.delete('/delete-request/:id', async (req, res) => {
+        router.delete('/delete-request/:id', verifyFBToken, async (req, res) => {
             try {
                 const { id } = req.params;
+                const email = req.decodedEmail;
                 const query = { _id: new ObjectId(id) };
+
+                const user = await usersCollection.findOne({ email });
+                const request = await requestsCollection.findOne(query);
+
+                if (!request) {
+                    return res.status(404).send({ message: 'Request not found' });
+                }
+
+                // admin can delete any request, users can only delete their own
+                if (user?.role !== 'admin' && request.requesterEmail !== email) {
+                    return res.status(403).send({ message: 'Forbidden access' });
+                }
+
                 const result = await requestsCollection.deleteOne(query);
                 res.send(result);
             } catch (error) {
@@ -143,9 +176,6 @@ const verifyFBToken = require('../middleware/verifyFBToken');
             const { bloodGroup, district, upazila } = req.query;
 
             const query = {};
-            if (!query) {
-                return;
-            }
             if (bloodGroup) {
                 query.bloodGroup = bloodGroup;
             }

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { usersCollection } = require('../config/db');
 const verifyFBToken = require('../middleware/verifyFBToken');
+const { verifyAdmin, verifyRole } = require('../middleware/verifyRole');
 
         router.post('/users', async (req, res) => {
             const userInfo = req.body;
@@ -16,7 +17,7 @@ const verifyFBToken = require('../middleware/verifyFBToken');
 
 
 
-        router.get('/users', verifyFBToken, async (req, res) => {
+        router.get('/users', verifyFBToken, verifyRole('admin', 'volunteer'), async (req, res) => {
             try {
                 const size = parseInt(req.query.size) || 10;
                 const page = parseInt(req.query.page) || 0;
@@ -53,7 +54,7 @@ const verifyFBToken = require('../middleware/verifyFBToken');
 
 
 
-        router.patch('/update/user/status', verifyFBToken, async (req, res) => {
+        router.patch('/update/user/status', verifyFBToken, verifyRole('admin', 'volunteer'), async (req, res) => {
             const { email, status } = req.query;
             const query = { email: email };
             const updateStatus = {
@@ -65,7 +66,7 @@ const verifyFBToken = require('../middleware/verifyFBToken');
             res.send(result);
         });
 
-        router.patch('/update/user/role', verifyFBToken, async (req, res) => {
+        router.patch('/update/user/role', verifyFBToken, verifyAdmin, async (req, res) => {
             const { email, role } = req.query;
             const query = { email: email };
             const updateRole = {
@@ -99,7 +100,7 @@ const verifyFBToken = require('../middleware/verifyFBToken');
 
 
 
-        // Update your backend endpoint - remove verifyFBToken for demo users
+        // demo users for test login
         router.get('/demo-users', async (req, res) => {
             try {
                 const demoEmails = ['donor@hemovia.com', 'admin@hemovia.com'];
