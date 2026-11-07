@@ -3,9 +3,11 @@ const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8
 const serviceAccount = JSON.parse(decoded);
 
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+}
 
 const verifyFBToken = async (req, res, next) => {
     const token = req.headers.authorization
