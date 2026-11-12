@@ -16,8 +16,18 @@ const requestsCollection = database.collection('requests');
 const paymentCollection = database.collection('payments');
 const centersCollection = database.collection('centers');
 
+let isConnected = false;
+async function connectDB() {
+    if (!isConnected) {
+        await client.connect();
+        isConnected = true;
+        console.log('Connected to MongoDB successfully.');
+    }
+}
+
 module.exports = {
     client,
+    connectDB,
     usersCollection,
     requestsCollection,
     paymentCollection,
